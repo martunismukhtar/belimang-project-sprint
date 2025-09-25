@@ -1,0 +1,38 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: gojo-postgres-postgresql
+    environment:
+      POSTGRES_USER: usrprd
+      POSTGRES_PASSWORD: pswdprd
+      POSTGRES_DB: db-fitbyte-prd
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  gojo-server:
+    image: us-west1-docker.pkg.dev/projectsprint-000001/ps-docker-repo/gojo:v1.0.0
+    container_name: gojo-server
+    ports:
+      - "7880:7880"
+    environment:
+      DATABASE_USERNAME: "usrprd"
+      DATABASE_PASSWORD: "pswdprd"
+      DATABASE_NAME: "db-fitbyte-prd"
+      DATABASE_HOST: "gojo-postgres-postgresql"
+      DATABASE_PORTS: "5432"
+      DATABASE_MAXCONNECTIONS: "10"
+      JWT_SECRET: "supersecretkey"
+      JWT_EXPIRE_HOURS: "24"
+      APP_NAME: "go-fitbyte"
+      SERVER_PORT: "7880"
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PREFORK: "false"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

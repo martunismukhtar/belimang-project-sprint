@@ -1,0 +1,140 @@
+definitions:
+  entities.Book:
+    properties:
+      author:
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  entities.DeleteRequest:
+    properties:
+      id:
+        type: integer
+    type: object
+  entities.UpdateBookRequest:
+    properties:
+      author:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+    required:
+    - id
+    type: object
+info:
+  contact: {}
+  description: This is a sample server for a fitness tracking application.
+  title: Fitbyte API
+  version: "1.0"
+paths:
+  /api/v1/book:
+    post:
+      consumes:
+      - application/json
+      description: Add a new book to the collection
+      parameters:
+      - description: Book object
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/entities.Book'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new book
+      tags:
+      - Books
+    put:
+      consumes:
+      - application/json
+      description: Update an existing book (partial updates allowed)
+      parameters:
+      - description: Book update request (partial fields allowed)
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/entities.UpdateBookRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Update a book
+      tags:
+      - Books
+  /api/v1/books:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a book from the collection
+      parameters:
+      - description: Delete request with book ID
+        in: body
+        name: deleteRequest
+        required: true
+        schema:
+          $ref: '#/definitions/entities.DeleteRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Delete a book
+      tags:
+      - Books
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

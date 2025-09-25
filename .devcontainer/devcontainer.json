@@ -1,0 +1,14 @@
+{
+  "name": "Go Fiber Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go"
+      ]
+    }
+  },
+  "postCreateCommand": "go mod tidy; .devcontainer/postCreate.sh"
+}

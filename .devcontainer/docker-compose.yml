@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    image: go-belimang-dev
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    ports:
+      - "8081:8080"
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: abc
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: belimang
+    ports:
+      - "5433:5432"   # host:container mapping
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
