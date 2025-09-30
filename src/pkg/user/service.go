@@ -28,7 +28,7 @@ var (
 type Service interface {
 	Register(username, email, password, role string) (*entities.User, error)
 	Login(username, password, role string) (string, *entities.User, error)
-	GetUserByID(id uuid.UUID) (*entities.User, error)
+	GetUserByID(id string) (*entities.User, error)
 	ValidateToken(tokenString string) (*jwt.MapClaims, error)
 }
 
@@ -146,8 +146,13 @@ func (s *service) Login(username, password, role string) (string, *entities.User
 }
 
 // GetUserByID retrieves a user by their ID
-func (s *service) GetUserByID(id uuid.UUID) (*entities.User, error) {
-	user, err := s.repository.FindByID(id)
+func (s *service) GetUserByID(id string) (*entities.User, error) {
+	userUUID, err := uuid.Parse(id)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user id format: %w", err)
+	}
+
+	user, err := s.repository.FindByID(userUUID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find user: %w", err)
 	}

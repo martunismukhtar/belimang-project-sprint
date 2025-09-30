@@ -147,3 +147,62 @@ func LoginUser(service user.Service) fiber.Handler {
 		})
 	}
 }
+
+// GetCurrentUser handles GET /users/me - returns current authenticated user info
+// @Summary      Get current user
+// @Description  Get authenticated user information
+// @Tags         Users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200      {object}  user.SuccessResponse
+// @Failure      401      {object}  user.ErrorResponse
+// @Failure      404      {object}  user.ErrorResponse
+// @Failure      500      {object}  user.ErrorResponse
+// @Router       /users/me [get]
+func GetCurrentUser(service user.Service) fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		// Get user ID from context (set by JWT middleware)
+		userID := c.Locals("user_id")
+
+		// Ensure it's a string
+		userUUID, ok := userID.(string)
+		if !ok {
+			return c.Status(http.StatusInternalServerError).JSON(user.ErrorResponse{
+				Status:  false,
+				Message: "Internal server error",
+				Error:   "invalid user_id type",
+			})
+		}
+
+		// Get user from service
+		currentUser, err := service.GetUserByID(userUUID)
+		if err != nil {
+			statusCode := http.StatusInternalServerError
+			if err == user.ErrUserNotFound {
+				statusCode = http.StatusNotFound
+			}
+
+			return c.Status(statusCode).JSON(user.ErrorResponse{
+				Status:  false,
+				Message: "Failed to get user",
+				Error:   err.Error(),
+			})
+		}
+
+		// Prepare response
+		userResponse := user.UserResponse{
+			ID:        currentUser.ID,
+			Username:  currentUser.Username,
+			Email:     currentUser.Email,
+			Role:      currentUser.Role,
+			CreatedAt: currentUser.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		}
+
+		return c.Status(http.StatusOK).JSON(user.SuccessResponse{
+			Status:  true,
+			Message: "User retrieved successfully",
+			Data:    userResponse,
+		})
+	}
+}
