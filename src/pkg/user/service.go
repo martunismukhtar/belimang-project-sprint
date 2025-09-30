@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -17,11 +19,12 @@ var (
 	ErrUsernameExists        = errors.New("username already exists")
 	ErrEmailExists           = errors.New("email already exists for this role")
 	ErrInvalidEmail          = errors.New("invalid email format")
-	ErrInvalidUsername       = errors.New("username must be 5-30 characters")
+	ErrInvalidUsername       = errors.New("username must be 5-30 characters and contain only alphanumeric characters and underscores")
 	ErrInvalidPassword       = errors.New("password must be 5-30 characters")
 	ErrUserNotFound          = errors.New("user not found")
 	ErrInvalidRole           = errors.New("invalid role")
 	emailRegex               = regexp.MustCompile(`^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$`)
+	usernameRegex            = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 )
 
 // Service interface defines business logic operations for users
@@ -40,7 +43,7 @@ type service struct {
 // NewService creates a new user service instance
 func NewService(repo Repository, jwtSecret string) Service {
 	if jwtSecret == "" {
-		jwtSecret = "default-secret-change-in-production"
+		panic("JWT_SECRET environment variable is required for security. Please set it in your environment or .env file")
 	}
 	return &service{
 		repository: repo,
@@ -55,12 +58,19 @@ func (s *service) Register(username, email, password, role string) (*entities.Us
 		return nil, ErrInvalidRole
 	}
 
-	// Validate username length
-	if len(username) < 5 || len(username) > 30 {
+	// Sanitize and validate username
+	username = strings.TrimSpace(username)
+	usernameLen := utf8.RuneCountInString(username)
+	if usernameLen < 5 || usernameLen > 30 {
+		return nil, ErrInvalidUsername
+	}
+	// Only allow alphanumeric characters and underscore
+	if !usernameRegex.MatchString(username) {
 		return nil, ErrInvalidUsername
 	}
 
-	// Validate email format
+	// Sanitize and validate email
+	email = strings.TrimSpace(strings.ToLower(email))
 	if !emailRegex.MatchString(email) {
 		return nil, ErrInvalidEmail
 	}
@@ -70,31 +80,13 @@ func (s *service) Register(username, email, password, role string) (*entities.Us
 		return nil, ErrInvalidPassword
 	}
 
-	// Check if username already exists (globally unique)
-	exists, err := s.repository.UsernameExists(username)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check username: %w", err)
-	}
-	if exists {
-		return nil, ErrUsernameExists
-	}
-
-	// Check if email exists for this role (email unique per role)
-	emailExists, err := s.repository.EmailExistsForRole(email, role)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check email: %w", err)
-	}
-	if emailExists {
-		return nil, ErrEmailExists
-	}
-
-	// Hash password
+	// Hash password before attempting to create user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user
+	// Create user - let database unique constraints handle duplicates
 	user := &entities.User{
 		ID:       uuid.New(),
 		Username: username,
@@ -104,6 +96,16 @@ func (s *service) Register(username, email, password, role string) (*entities.Us
 	}
 
 	if err := s.repository.Create(user); err != nil {
+		// Check if it's a unique constraint violation
+		errMsg := err.Error()
+		if strings.Contains(errMsg, "duplicate key") || strings.Contains(errMsg, "UNIQUE constraint") || strings.Contains(errMsg, "unique_violation") {
+			if strings.Contains(errMsg, "username") || strings.Contains(errMsg, "idx_users_username_unique") {
+				return nil, ErrUsernameExists
+			}
+			if strings.Contains(errMsg, "email") || strings.Contains(errMsg, "idx_users_email_role_unique") {
+				return nil, ErrEmailExists
+			}
+		}
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
