@@ -29,7 +29,7 @@ var (
 
 // Service interface defines business logic operations for users
 type Service interface {
-	Register(username, email, password, role string) (*entities.User, error)
+	Register(username, email, password, role string) (string, *entities.User, error)
 	Login(username, password, role string) (string, *entities.User, error)
 	GetUserByID(id string) (*entities.User, error)
 	ValidateToken(tokenString string) (*jwt.MapClaims, error)
@@ -51,39 +51,39 @@ func NewService(repo Repository, jwtSecret string) Service {
 	}
 }
 
-// Register creates a new user account with validation
-func (s *service) Register(username, email, password, role string) (*entities.User, error) {
+// Register creates a new user account with validation and returns a JWT token
+func (s *service) Register(username, email, password, role string) (string, *entities.User, error) {
 	// Validate role
 	if role != entities.RoleUser && role != entities.RoleAdmin {
-		return nil, ErrInvalidRole
+		return "", nil, ErrInvalidRole
 	}
 
 	// Sanitize and validate username
 	username = strings.TrimSpace(username)
 	usernameLen := utf8.RuneCountInString(username)
 	if usernameLen < 5 || usernameLen > 30 {
-		return nil, ErrInvalidUsername
+		return "", nil, ErrInvalidUsername
 	}
 	// Only allow alphanumeric characters and underscore
 	if !usernameRegex.MatchString(username) {
-		return nil, ErrInvalidUsername
+		return "", nil, ErrInvalidUsername
 	}
 
 	// Sanitize and validate email
 	email = strings.TrimSpace(strings.ToLower(email))
 	if !emailRegex.MatchString(email) {
-		return nil, ErrInvalidEmail
+		return "", nil, ErrInvalidEmail
 	}
 
 	// Validate password length (plain text before hashing)
 	if len(password) < 5 || len(password) > 30 {
-		return nil, ErrInvalidPassword
+		return "", nil, ErrInvalidPassword
 	}
 
 	// Hash password before attempting to create user
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		return "", nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	// Create user - let database unique constraints handle duplicates
@@ -100,16 +100,22 @@ func (s *service) Register(username, email, password, role string) (*entities.Us
 		errMsg := err.Error()
 		if strings.Contains(errMsg, "duplicate key") || strings.Contains(errMsg, "UNIQUE constraint") || strings.Contains(errMsg, "unique_violation") {
 			if strings.Contains(errMsg, "username") || strings.Contains(errMsg, "idx_users_username_unique") {
-				return nil, ErrUsernameExists
+				return "", nil, ErrUsernameExists
 			}
 			if strings.Contains(errMsg, "email") || strings.Contains(errMsg, "idx_users_email_role_unique") {
-				return nil, ErrEmailExists
+				return "", nil, ErrEmailExists
 			}
 		}
-		return nil, fmt.Errorf("failed to create user: %w", err)
+		return "", nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
-	return user, nil
+	// Generate JWT token for the newly registered user
+	token, err := s.generateJWT(user)
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	return token, user, nil
 }
 
 // Login authenticates a user and returns a JWT token

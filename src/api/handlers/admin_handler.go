@@ -42,8 +42,8 @@ func RegisterAdmin(service user.Service) fiber.Handler {
 			})
 		}
 
-		// Register user with 'admin' role
-		newAdmin, err := service.Register(req.Username, req.Email, req.Password, entities.RoleAdmin)
+		// Register user with 'admin' role and get token
+		token, _, err := service.Register(req.Username, req.Email, req.Password, entities.RoleAdmin)
 		if err != nil {
 			statusCode := http.StatusInternalServerError
 			if err == user.ErrUsernameExists || err == user.ErrEmailExists {
@@ -59,19 +59,15 @@ func RegisterAdmin(service user.Service) fiber.Handler {
 			})
 		}
 
-		// Prepare response
-		adminResponse := user.UserResponse{
-			ID:        newAdmin.ID,
-			Username:  newAdmin.Username,
-			Email:     newAdmin.Email,
-			Role:      newAdmin.Role,
-			CreatedAt: newAdmin.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		// Prepare response with token
+		response := map[string]interface{}{
+			"token": token,
 		}
 
 		return c.Status(http.StatusCreated).JSON(user.SuccessResponse{
 			Status:  true,
 			Message: "Admin registered successfully",
-			Data:    adminResponse,
+			Data:    response,
 		})
 	}
 }

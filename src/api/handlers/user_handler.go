@@ -45,8 +45,8 @@ func RegisterUser(service user.Service) fiber.Handler {
 			})
 		}
 
-		// Register user with 'user' role
-		newUser, err := service.Register(req.Username, req.Email, req.Password, entities.RoleUser)
+		// Register user with 'user' role and get token
+		token, _, err := service.Register(req.Username, req.Email, req.Password, entities.RoleUser)
 		if err != nil {
 			statusCode := http.StatusInternalServerError
 			if err == user.ErrUsernameExists || err == user.ErrEmailExists {
@@ -62,19 +62,15 @@ func RegisterUser(service user.Service) fiber.Handler {
 			})
 		}
 
-		// Prepare response
-		userResponse := user.UserResponse{
-			ID:        newUser.ID,
-			Username:  newUser.Username,
-			Email:     newUser.Email,
-			Role:      newUser.Role,
-			CreatedAt: newUser.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
+		// Prepare response with token
+		response := map[string]interface{}{
+			"token": token,
 		}
 
 		return c.Status(http.StatusCreated).JSON(user.SuccessResponse{
 			Status:  true,
 			Message: "User registered successfully",
-			Data:    userResponse,
+			Data:    response,
 		})
 	}
 }
