@@ -120,14 +120,19 @@ func (s *service) UploadImage(fileHeader *multipart.FileHeader) (string, error) 
 	}
 
 	// Construct the file URL
-	endpoint := os.Getenv("MINIO_ENDPOINT")
+	// Use public endpoint if set, otherwise use MINIO_ENDPOINT
+	publicEndpoint := os.Getenv("MINIO_PUBLIC_ENDPOINT")
+	if publicEndpoint == "" {
+		publicEndpoint = os.Getenv("MINIO_ENDPOINT")
+	}
+
 	useSSL := os.Getenv("MINIO_USE_SSL") == "true"
 	protocol := "http"
 	if useSSL {
 		protocol = "https"
 	}
 
-	imageURL := fmt.Sprintf("%s://%s/%s/%s", protocol, endpoint, s.bucketName, objectName)
+	imageURL := fmt.Sprintf("%s://%s/%s/%s", protocol, publicEndpoint, s.bucketName, objectName)
 
 	return imageURL, nil
 }

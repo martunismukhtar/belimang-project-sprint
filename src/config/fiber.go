@@ -8,9 +8,9 @@ import (
 
 func NewFiber(config *viper.Viper) *fiber.App {
 	var app = fiber.New(fiber.Config{
-		AppName:      config.GetString("app.name"),
+		AppName:      config.GetString("APP_NAME"),
 		ErrorHandler: NewErrorHandler(),
-		Prefork:      config.GetBool("server.prefork"),
+		Prefork:      config.GetBool("SERVER_PREFORK"),
 	})
 
 	app.Use(cors.New())

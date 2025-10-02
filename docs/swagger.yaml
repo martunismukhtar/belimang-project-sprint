@@ -1,32 +1,68 @@
 definitions:
-  entities.Book:
+  image.ErrorResponse:
     properties:
-      author:
+      error:
         type: string
-      createdAt:
+      message:
         type: string
-      id:
-        type: integer
-      title:
-        type: string
-      updatedAt:
+      status:
+        type: boolean
+    type: object
+  image.UploadData:
+    properties:
+      imageUrl:
         type: string
     type: object
-  entities.DeleteRequest:
+  image.UploadResponse:
     properties:
-      id:
-        type: integer
-    type: object
-  entities.UpdateBookRequest:
-    properties:
-      author:
+      data:
+        $ref: '#/definitions/image.UploadData'
+      message:
         type: string
-      id:
-        type: integer
-      title:
+    type: object
+  user.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+  user.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
         type: string
     required:
-    - id
+    - password
+    - username
+    type: object
+  user.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 30
+        minLength: 5
+        type: string
+      username:
+        maxLength: 30
+        minLength: 5
+        type: string
+    required:
+    - email
+    - password
+    - username
+    type: object
+  user.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        type: string
+      status:
+        type: boolean
     type: object
 info:
   contact: {}
@@ -34,104 +70,202 @@ info:
   title: Fitbyte API
   version: "1.0"
 paths:
-  /api/v1/book:
+  /admin/login:
     post:
       consumes:
       - application/json
-      description: Add a new book to the collection
+      description: Authenticate an admin and return JWT token
       parameters:
-      - description: Book object
+      - description: Login credentials
         in: body
-        name: book
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/entities.Book'
+          $ref: '#/definitions/user.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/user.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/user.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
-            type: object
-      summary: Create a new book
+            $ref: '#/definitions/user.ErrorResponse'
+      summary: Admin login
       tags:
-      - Books
-    put:
+      - Admins
+  /admin/register:
+    post:
       consumes:
       - application/json
-      description: Update an existing book (partial updates allowed)
+      description: Create a new admin account with role 'admin'
       parameters:
-      - description: Book update request (partial fields allowed)
+      - description: Registration details
         in: body
-        name: book
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/entities.UpdateBookRequest'
+          $ref: '#/definitions/user.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+      summary: Register a new admin
+      tags:
+      - Admins
+  /image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an image file (jpg/jpeg only, 10KB-2MB)
+      parameters:
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/image.UploadResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
+            $ref: '#/definitions/image.ErrorResponse'
+        "401":
+          description: Unauthorized
           schema:
-            additionalProperties: true
-            type: object
-      summary: Update a book
+            $ref: '#/definitions/image.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload an image
       tags:
-      - Books
-  /api/v1/books:
-    delete:
+      - Image
+  /users/login:
+    post:
       consumes:
       - application/json
-      description: Remove a book from the collection
+      description: Authenticate a user and return JWT token
       parameters:
-      - description: Delete request with book ID
+      - description: Login credentials
         in: body
-        name: deleteRequest
+        name: request
         required: true
         schema:
-          $ref: '#/definitions/entities.DeleteRequest'
+          $ref: '#/definitions/user.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/user.SuccessResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/user.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
-            type: object
-      summary: Delete a book
+            $ref: '#/definitions/user.ErrorResponse'
+      summary: User login
       tags:
-      - Books
+      - Users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get authenticated user information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.SuccessResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - Users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account with role 'user'
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/user.SuccessResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/user.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     in: header
