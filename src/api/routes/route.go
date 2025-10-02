@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"belimang/src/pkg/image"
 	"belimang/src/pkg/user"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,6 +17,7 @@ func SetupRoutes(app *fiber.App, v *viper.Viper, db *gorm.DB, services Services)
 	// Setup all routes
 	UserRouter(api, services.UserService)
 	AdminRouter(api, services.UserService)
+	ImageRouter(api, services.UserService, services.ImageService)
 
 	// --- Health check route for Kubernetes probes ---
 	app.Get("/healthz", func(c *fiber.Ctx) error {
@@ -34,7 +36,8 @@ func SetupRoutes(app *fiber.App, v *viper.Viper, db *gorm.DB, services Services)
 
 // Services struct holds all service dependencies
 type Services struct {
-	UserService user.Service
+	UserService  user.Service
+	ImageService image.Service
 	// ActivityService   activity.Service
 	// UploadFileService userfile.Service
 }
