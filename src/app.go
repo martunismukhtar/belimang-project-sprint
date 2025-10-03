@@ -18,12 +18,13 @@ func main() {
 	v := config.NewViper()
 	db := config.NewGorm(v)
 	app := config.NewFiber(v)
+	minioClient := config.InitMinIO()
 
 	if err := config.NewSwagger(app); err != nil {
 		log.Printf("Failed to initialize Swagger: %v", err)
 	}
 
-	services := config.InitServices(db)
+	services := config.InitServices(db, minioClient)
 	routes.SetupRoutes(app, v, db, services)
 
 	// Run server
