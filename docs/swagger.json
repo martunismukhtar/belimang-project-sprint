@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "This is a sample server for a fitness tracking application.",
-        "title": "Fitbyte API",
+        "title": "belimang API",
         "contact": {},
         "version": "1.0"
     },
@@ -106,6 +106,403 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/user.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/merchants": {
+            "post": {
+                "description": "Add a new merchant to the collection",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Merchants"
+                ],
+                "summary": "Create a new merchant",
+                "parameters": [
+                    {
+                        "description": "Merchant object",
+                        "name": "merchant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.RequestMerchant"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/merchants/{merchantId}/items": {
+            "post": {
+                "description": "Add a new item under a specific merchant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Merchants"
+                ],
+                "summary": "Create a new item for a merchant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Merchant ID (UUID)",
+                        "name": "merchantId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New Item",
+                        "name": "item",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.RequestItems"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/merchants/nearby/{lat}/{lon}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get nearest merchants based on user's lat \u0026 lon",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchase"
+                ],
+                "summary": "Get nearby merchants",
+                "parameters": [
+                    {
+                        "type": "number",
+                        "description": "Latitude (-90 to 90)",
+                        "name": "lat",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Longitude (-180 to 180)",
+                        "name": "lon",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Merchant ID",
+                        "name": "merchantId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Merchant name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Merchant category",
+                        "name": "merchantCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 5)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pagination offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/estimate": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "estimate based on user's lat \u0026 lon",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchase"
+                ],
+                "summary": "estimate",
+                "parameters": [
+                    {
+                        "description": "Estimate request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.EstimateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/orders": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get orders",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchase"
+                ],
+                "summary": "Get orders",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Merchant ID",
+                        "name": "merchantId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Merchant name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Merchant category",
+                        "name": "merchantCategory",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Limit results (default: 5)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Pagination offset (default: 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "order based on estimate time id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Purchase"
+                ],
+                "summary": "order",
+                "parameters": [
+                    {
+                        "description": "Estimate request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entities.OrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -312,6 +709,202 @@
         }
     },
     "definitions": {
+        "entities.EstimateRequest": {
+            "type": "object",
+            "required": [
+                "orders",
+                "userLocation"
+            ],
+            "properties": {
+                "orders": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "items",
+                            "merchantId"
+                        ],
+                        "properties": {
+                            "isStartingPoint": {
+                                "type": "boolean"
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "required": [
+                                        "itemId",
+                                        "quantity"
+                                    ],
+                                    "properties": {
+                                        "itemId": {
+                                            "type": "string"
+                                        },
+                                        "quantity": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            },
+                            "merchantId": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "userLocation": {
+                    "type": "object",
+                    "required": [
+                        "lat",
+                        "long"
+                    ],
+                    "properties": {
+                        "lat": {
+                            "type": "number"
+                        },
+                        "long": {
+                            "type": "number"
+                        }
+                    }
+                }
+            }
+        },
+        "entities.Location": {
+            "type": "object",
+            "required": [
+                "lat",
+                "long"
+            ],
+            "properties": {
+                "lat": {
+                    "type": "number"
+                },
+                "long": {
+                    "type": "number"
+                }
+            }
+        },
+        "entities.MerchantCategory": {
+            "type": "string",
+            "enum": [
+                "SmallRestaurant",
+                "MediumRestaurant",
+                "LargeRestaurant",
+                "MerchandiseRestaurant",
+                "BoothKiosk",
+                "ConvenienceStore"
+            ],
+            "x-enum-varnames": [
+                "SmallRestaurant",
+                "MediumRestaurant",
+                "LargeRestaurant",
+                "MerchandiseRestaurant",
+                "BoothKiosk",
+                "ConvenienceStore"
+            ]
+        },
+        "entities.OrderRequest": {
+            "type": "object",
+            "required": [
+                "calculatedEstimateId"
+            ],
+            "properties": {
+                "calculatedEstimateId": {
+                    "type": "string"
+                }
+            }
+        },
+        "entities.ProductCategory": {
+            "type": "string",
+            "enum": [
+                "Beverage",
+                "Food",
+                "Snack",
+                "Condiments",
+                "Additions"
+            ],
+            "x-enum-varnames": [
+                "Beverage",
+                "Food",
+                "Snack",
+                "Condiments",
+                "Additions"
+            ]
+        },
+        "entities.RequestItems": {
+            "type": "object",
+            "required": [
+                "imageUrl",
+                "name",
+                "price",
+                "productCategory"
+            ],
+            "properties": {
+                "imageUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 3
+                },
+                "price": {
+                    "type": "number"
+                },
+                "productCategory": {
+                    "enum": [
+                        "Beverage",
+                        "Food",
+                        "Snack",
+                        "Condiments",
+                        "Additions"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.ProductCategory"
+                        }
+                    ]
+                }
+            }
+        },
+        "entities.RequestMerchant": {
+            "type": "object",
+            "required": [
+                "imageUrl",
+                "location",
+                "merchantCategory",
+                "name"
+            ],
+            "properties": {
+                "imageUrl": {
+                    "type": "string"
+                },
+                "location": {
+                    "$ref": "#/definitions/entities.Location"
+                },
+                "merchantCategory": {
+                    "enum": [
+                        "SmallRestaurant",
+                        "MediumRestaurant",
+                        "LargeRestaurant",
+                        "MerchandiseRestaurant",
+                        "BoothKiosk",
+                        "ConvenienceStore"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/entities.MerchantCategory"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 3
+                }
+            }
+        },
         "image.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -412,6 +1005,7 @@
     },
     "securityDefinitions": {
         "BearerAuth": {
+            "description": "Type \"Bearer\" followed by a space and JWT token.",
             "type": "apiKey",
             "name": "Authorization",
             "in": "header"

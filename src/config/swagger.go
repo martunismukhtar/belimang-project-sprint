@@ -35,7 +35,7 @@ func NewSwagger(app *fiber.App) error {
 		BasePath: "/",
 		FilePath: "./docs/swagger.json",
 		Path:     "swagger",
-		Title:    "Go-FitByte API Documentation",
+		Title:    "BeliMang API Documentation",
 		CacheAge: 86400,
 	}))
 

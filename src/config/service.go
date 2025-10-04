@@ -3,6 +3,8 @@ package config
 import (
 	"belimang/src/api/routes"
 	"belimang/src/pkg/image"
+	"belimang/src/pkg/merchant"
+	"belimang/src/pkg/purchase"
 	"belimang/src/pkg/user"
 	"os"
 
@@ -25,8 +27,22 @@ func InitServices(db *gorm.DB, minioClient *minio.Client) routes.Services {
 	userService := user.NewService(userRepo, jwtSecret)
 	imageService := image.NewService(minioClient)
 
+	//merchant
+
+	merchantRepo := merchant.NewRepo(db)
+	merchantService := merchant.NewService(merchantRepo)
+
+	//purchase
+	purchaseRepo := purchase.NewRepo(db)
+	purchaseService := purchase.NewService(purchaseRepo)
+
+	//
+
 	return routes.Services{
 		UserService:  userService,
 		ImageService: imageService,
+		// BookService:     bookService,
+		MerchantService: merchantService,
+		PurchaseService: purchaseService,
 	}
 }

@@ -3,7 +3,10 @@ package config
 import (
 	"log"
 
+	"fmt"
+
 	"github.com/joho/godotenv"
+
 	"github.com/spf13/viper"
 )
 
@@ -18,6 +21,12 @@ func NewViper() *viper.Viper {
 
 	// Set config to read from environment variables
 	config.AutomaticEnv()
+	fmt.Println("Loading configuration from .env file...")
+	config.SetConfigFile(".env")
 
+	// Read the config file
+	if err := config.ReadInConfig(); err != nil {
+		panic(fmt.Errorf("Fatal error config file: %w \n", err))
+	}
 	return config
 }

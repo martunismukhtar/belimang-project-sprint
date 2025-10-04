@@ -1,4 +1,143 @@
 definitions:
+  entities.EstimateRequest:
+    properties:
+      orders:
+        items:
+          properties:
+            isStartingPoint:
+              type: boolean
+            items:
+              items:
+                properties:
+                  itemId:
+                    type: string
+                  quantity:
+                    type: integer
+                required:
+                - itemId
+                - quantity
+                type: object
+              type: array
+            merchantId:
+              type: string
+          required:
+          - items
+          - merchantId
+          type: object
+        minItems: 1
+        type: array
+      userLocation:
+        properties:
+          lat:
+            type: number
+          long:
+            type: number
+        required:
+        - lat
+        - long
+        type: object
+    required:
+    - orders
+    - userLocation
+    type: object
+  entities.Location:
+    properties:
+      lat:
+        type: number
+      long:
+        type: number
+    required:
+    - lat
+    - long
+    type: object
+  entities.MerchantCategory:
+    enum:
+    - SmallRestaurant
+    - MediumRestaurant
+    - LargeRestaurant
+    - MerchandiseRestaurant
+    - BoothKiosk
+    - ConvenienceStore
+    type: string
+    x-enum-varnames:
+    - SmallRestaurant
+    - MediumRestaurant
+    - LargeRestaurant
+    - MerchandiseRestaurant
+    - BoothKiosk
+    - ConvenienceStore
+  entities.OrderRequest:
+    properties:
+      calculatedEstimateId:
+        type: string
+    required:
+    - calculatedEstimateId
+    type: object
+  entities.ProductCategory:
+    enum:
+    - Beverage
+    - Food
+    - Snack
+    - Condiments
+    - Additions
+    type: string
+    x-enum-varnames:
+    - Beverage
+    - Food
+    - Snack
+    - Condiments
+    - Additions
+  entities.RequestItems:
+    properties:
+      imageUrl:
+        type: string
+      name:
+        maxLength: 30
+        minLength: 3
+        type: string
+      price:
+        type: number
+      productCategory:
+        allOf:
+        - $ref: '#/definitions/entities.ProductCategory'
+        enum:
+        - Beverage
+        - Food
+        - Snack
+        - Condiments
+        - Additions
+    required:
+    - imageUrl
+    - name
+    - price
+    - productCategory
+    type: object
+  entities.RequestMerchant:
+    properties:
+      imageUrl:
+        type: string
+      location:
+        $ref: '#/definitions/entities.Location'
+      merchantCategory:
+        allOf:
+        - $ref: '#/definitions/entities.MerchantCategory'
+        enum:
+        - SmallRestaurant
+        - MediumRestaurant
+        - LargeRestaurant
+        - MerchandiseRestaurant
+        - BoothKiosk
+        - ConvenienceStore
+      name:
+        maxLength: 30
+        minLength: 3
+        type: string
+    required:
+    - imageUrl
+    - location
+    - merchantCategory
+    - name
+    type: object
   image.ErrorResponse:
     properties:
       error:
@@ -67,7 +206,7 @@ definitions:
 info:
   contact: {}
   description: This is a sample server for a fitness tracking application.
-  title: Fitbyte API
+  title: belimang API
   version: "1.0"
 paths:
   /admin/login:
@@ -138,6 +277,266 @@ paths:
       summary: Register a new admin
       tags:
       - Admins
+  /api/v1/admin/merchants:
+    post:
+      consumes:
+      - application/json
+      description: Add a new merchant to the collection
+      parameters:
+      - description: Merchant object
+        in: body
+        name: merchant
+        required: true
+        schema:
+          $ref: '#/definitions/entities.RequestMerchant'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new merchant
+      tags:
+      - Merchants
+  /api/v1/admin/merchants/{merchantId}/items:
+    post:
+      consumes:
+      - application/json
+      description: Add a new item under a specific merchant
+      parameters:
+      - description: Merchant ID (UUID)
+        in: path
+        name: merchantId
+        required: true
+        type: string
+      - description: New Item
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/entities.RequestItems'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Create a new item for a merchant
+      tags:
+      - Merchants
+  /api/v1/merchants/nearby/{lat}/{lon}:
+    get:
+      consumes:
+      - application/json
+      description: Get nearest merchants based on user's lat & lon
+      parameters:
+      - description: Latitude (-90 to 90)
+        in: path
+        name: lat
+        required: true
+        type: number
+      - description: Longitude (-180 to 180)
+        in: path
+        name: lon
+        required: true
+        type: number
+      - description: Merchant ID
+        in: query
+        name: merchantId
+        type: string
+      - description: Merchant name
+        in: query
+        name: name
+        type: string
+      - description: Merchant category
+        in: query
+        name: merchantCategory
+        type: string
+      - description: 'Limit results (default: 5)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Pagination offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get nearby merchants
+      tags:
+      - Purchase
+  /api/v1/users/estimate:
+    post:
+      consumes:
+      - application/json
+      description: estimate based on user's lat & lon
+      parameters:
+      - description: Estimate request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entities.EstimateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: estimate
+      tags:
+      - Purchase
+  /api/v1/users/orders:
+    get:
+      consumes:
+      - application/json
+      description: Get orders
+      parameters:
+      - description: Merchant ID
+        in: query
+        name: merchantId
+        type: string
+      - description: Merchant name
+        in: query
+        name: name
+        type: string
+      - description: Merchant category
+        in: query
+        name: merchantCategory
+        type: string
+      - description: 'Limit results (default: 5)'
+        in: query
+        name: limit
+        type: integer
+      - description: 'Pagination offset (default: 0)'
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              additionalProperties: true
+              type: object
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get orders
+      tags:
+      - Purchase
+    post:
+      consumes:
+      - application/json
+      description: order based on estimate time id
+      parameters:
+      - description: Estimate request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entities.OrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: order
+      tags:
+      - Purchase
   /image:
     post:
       consumes:
@@ -268,6 +667,7 @@ paths:
       - Users
 securityDefinitions:
   BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
     in: header
     name: Authorization
     type: apiKey

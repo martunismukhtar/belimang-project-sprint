@@ -43,6 +43,34 @@ migrate-down-1:
 migrate-version:
 	$(MIGRATE_CMD) version
 
+
+# ==========================
+# Run specific SQL migration file
+# ==========================
+# Convert DB_URL for psql (hapus prefix "postgresql://")
+PSQL_URL=$(shell echo $(DB_URL) | sed 's/^postgresql:\/\///')
+
+# Extract connection parts for psql
+DB_USER=$(shell echo $(DB_URL) | sed -E 's#.*//([^:]+):.*#\1#')
+DB_PASS=$(shell echo $(DB_URL) | sed -E 's#.*//[^:]+:([^@]+)@.*#\1#')
+DB_HOST=$(shell echo $(DB_URL) | sed -E 's#.*@([^:]+):.*#\1#')
+DB_PORT=$(shell echo $(DB_URL) | sed -E 's#.*:([0-9]+)/.*#\1#')
+DB_NAME=$(shell echo $(DB_URL) | sed -E 's#.*/([^?]+)\?.*#\1#')
+
+.PHONY: sql-run
+sql-run:
+	@if [ -z "$(id)" ] || [ -z "$(dir)" ]; then \
+		echo "❌ Usage: make sql-run id=20250929072208 dir=up"; \
+		exit 1; \
+	fi; \
+	SQL_FILE=$(MIGRATIONS_DIR)/$(id)_*.$(dir).sql; \
+	if [ ! -f $$SQL_FILE ]; then \
+		echo "❌ File not found: $$SQL_FILE"; \
+		exit 1; \
+	fi; \
+	echo "▶️ Running $$SQL_FILE"; \
+	PGPASSWORD=$(DB_PASS) psql -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) -f $$SQL_FILE
+
 # ==========================
 # Help
 # ==========================
@@ -56,3 +84,4 @@ help:
 	@echo "  migrate-down      Rollback all migrations"
 	@echo "  migrate-down-1    Rollback one migration step"
 	@echo "  migrate-version   Show current migration version"
+	@echo "  sql-run           Run a specific SQL migration file (usage: make sql-run id=20250929072208 dir=up)"

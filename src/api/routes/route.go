@@ -2,6 +2,8 @@ package routes
 
 import (
 	"belimang/src/pkg/image"
+	"belimang/src/pkg/merchant"
+	"belimang/src/pkg/purchase"
 	"belimang/src/pkg/user"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,6 +17,12 @@ func SetupRoutes(app *fiber.App, v *viper.Viper, db *gorm.DB, services Services)
 	UserRouter(app, services.UserService)
 	AdminRouter(app, services.UserService)
 	ImageRouter(app, services.UserService, services.ImageService)
+	// API v1 group
+	api := app.Group("/api/v1")
+
+	// BookRouter(api, services.BookService)
+	MerchantRouter(api, services.MerchantService)
+	PurchaseRouter(api, services.UserService, services.PurchaseService)
 
 	// --- Health check route for Kubernetes probes ---
 	app.Get("/healthz", func(c *fiber.Ctx) error {
@@ -35,6 +43,9 @@ func SetupRoutes(app *fiber.App, v *viper.Viper, db *gorm.DB, services Services)
 type Services struct {
 	UserService  user.Service
 	ImageService image.Service
+
+	MerchantService merchant.Service
+	PurchaseService purchase.Service
 	// ActivityService   activity.Service
 	// UploadFileService userfile.Service
 }

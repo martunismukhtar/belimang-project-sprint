@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// @title           Fitbyte API
+// @title           belimang API
 // @version         1.0
 // @description     This is a sample server for a fitness tracking application.
 
